@@ -30,7 +30,7 @@
         <EditTextPreference
             android:defaultValue=""
             android:key="pref_match"
-            android:summary="Text to trigger alert, if matched"
+            android:summary="Text in sender to match for sms or mms. Text in body to match for sms only."
             android:title="Match Pattern" />
         
         <CheckBoxPreference

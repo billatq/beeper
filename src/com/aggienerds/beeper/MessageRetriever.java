@@ -17,7 +17,7 @@ public class MessageRetriever {
 		this.context = context;
 	}
 
-	List<Message> getConversationsLast(Boolean unreadOnly) {
+	public List<Message> getConversationsLast(Boolean unreadOnly) {
 		List<Message> messages = new ArrayList<Message>();
 		ContentResolver contentResolver = context.getContentResolver();
 		final String[] projection = new String[] { "*" };
@@ -51,17 +51,17 @@ public class MessageRetriever {
 					Message m = new Message();
 					
 					// Debugging
-					/*
 					String columns[] = cursor.getColumnNames();
 					String values[] = new String[columns.length];
 					for (int i = 0; i < columns.length; ++i)
 					{
 						values[i] = cursor.getString(cursor.getColumnIndex(columns[i]));
 					}
-					*/
 				
-					// MMS
-					if ("application/vnd.wap.multipart.related".equals(type))
+					// MMS. Sometimes, right after it's been delivered, the mime type hasn't
+					// yet been extracted. If we have a subject, we know it can't be a SMS.
+					if ("application/vnd.wap.multipart.related".equals(type)
+					    || (cursor.getString(cursor.getColumnIndex("sub")) != null))
 					{
 						m.setBody(getMmsText(_id));
 						m.setAddress(getMmsAddress(_id));
@@ -96,7 +96,10 @@ public class MessageRetriever {
 	
 	private String getMmsText(String id) {
 		Cursor cursor = context.getContentResolver().query(
-				Uri.parse("content://mms/" + id + "/part"), null, null, null,
+				Uri.parse("content://mms/" + id + "/part"),
+				null,
+				null,
+				null,
 				null);
 
 		while (cursor.moveToNext()) {
@@ -112,8 +115,12 @@ public class MessageRetriever {
 	    String selectionAdd = new String("msg_id=" + id);
 	    String uriStr = MessageFormat.format("content://mms/{0}/addr", id);
 	    Uri uriAddress = Uri.parse(uriStr);
-	    Cursor cursor = context.getContentResolver().query(uriAddress, null,
-	        selectionAdd, null, null);
+	    Cursor cursor = context.getContentResolver().query(
+	    		uriAddress,
+	    		null,
+	    		selectionAdd,
+	    		null,
+	    		null);
 	    
 	    if (cursor.moveToFirst()) {
 	        do {
@@ -133,8 +140,12 @@ public class MessageRetriever {
 	private String getSmsText(String id) {
 		String selection = "_id = " + id;
 		Uri uri = Uri.parse("content://sms");
-		Cursor cursor = context.getContentResolver().query(uri, null,
-				selection, null, null);
+		Cursor cursor = context.getContentResolver().query(
+				uri,
+				null,
+				selection,
+				null,
+				null);
 		if (cursor.moveToFirst()) {
 			return cursor.getString(cursor.getColumnIndex("body"));
 		}

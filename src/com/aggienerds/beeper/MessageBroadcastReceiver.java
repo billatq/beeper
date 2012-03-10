@@ -53,19 +53,18 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 	{
 		String matchText = prefs.getString("pref_match", "");
 		
-		String comparison = message.getAddress() + " " + message.getSubject() + " " + message.getSubject();
+		String comparison = message.getAddress() + " " + message.getSubject() + " " + message.getBody();
 		
-		if (prefs.getBoolean("pref_regex", false))
+		if (prefs.getBoolean("pref_regex", false) != true)
 		{
-			// Regular case
-			
 			// Nothing provided. Match everything.
 			if (comparison == "") { return true; }
 			if (comparison.contains(matchText)) { return true; }
 		}
 		else
 		{
-			if (comparison.matches(".*" + matchText + ".*")) { return true; }
+			// Run it through the regex
+			if (comparison.matches("^.*" + matchText + ".*$")) { return true; }
 		}
 		
 		return false;
@@ -76,8 +75,6 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 		Log.d("MessageBroadcastRecieiver", "Setting up notification message");
 		NotificationManager nm = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		SharedPreferences prefs = preferences;
-		
-		// TODO: Get handle on notification and set audio level to higher
 		
 		// TODO: Make notification ids unique?
 		Log.d("MessageBroadcastRecieiver", "Trying to broadcast out!");
@@ -99,9 +96,44 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
         // The PendingIntent to launch our activity if the user selects this notification
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, messagingIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
         
+        boolean haveSubject = false;
+        if ((message.getSubject() != null) && (message.getSubject().length() > 0))
+        {
+        	haveSubject = true;
+        }
+        
+        boolean haveBody = false;
+        if ((message.getBody() != null) && (message.getBody().length() > 0))
+        {
+        	haveBody = true;
+        }
+        
+        String subject = "";
+        String body = "";
+        
+        if (haveSubject && haveBody)
+        {
+        	subject = message.getSubject();
+        	body = message.getBody();
+        }
+        else if (haveSubject && !haveBody)
+        {
+        	subject = message.getAddress();
+        	body = message.getSubject();
+        }
+        else if (haveBody && !haveSubject)
+        {
+        	subject = message.getAddress();
+        	body = message.getBody();
+        }
+        else
+        {
+        	subject = "Incoming Page";
+        	body = message.getAddress();
+        }
+        
 
-        // Set the info for the views that show in the notification panel.
-        notification.setLatestEventInfo(context, "Incoming Page", message.getBody(), contentIntent);
+        notification.setLatestEventInfo(context, subject, body, contentIntent);
         
         // Have it cancel when it's pressed, but also loop audio, etc. until it's handled.
         notification.flags |= (Notification.FLAG_AUTO_CANCEL | Notification.FLAG_INSISTENT);
@@ -138,13 +170,6 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 		// TODO: Better algorithm than that
 		// Perhaps look at the time on the message returned?
 		// Can we get the sender address from the notification?
-		// Wait a second for for the message to settle
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
 		
 		// Try to find messages
 		long startTime = System.currentTimeMillis();
