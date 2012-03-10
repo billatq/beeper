@@ -10,7 +10,7 @@
         
         <RingtonePreference
             android:key="pref_alertsound"
-            android:summary="Sound played on loop until alert dismissed"
+            android:summary="Sound to be played on loop until alert dismissed"
             android:title="Alert Sound" />
         
         <CheckBoxPreference
@@ -22,7 +22,7 @@
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="pref_vibrate"
-            android:summary="Vibrate in addition to audio"
+            android:summary="Vibrate, even if vibration disabled"
             android:title="Vibrate" />
     </PreferenceCategory>
     

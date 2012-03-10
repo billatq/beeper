@@ -7,7 +7,6 @@ public class BeeperActivity extends PreferenceActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		getPreferenceManager().setSharedPreferencesName("preferences");
 		addPreferencesFromResource(R.xml.preferences);
 	}
 }

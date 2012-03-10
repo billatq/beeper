@@ -13,6 +13,9 @@
     <!-- Read the system SMS/MMS store -->
     <uses-permission android:name="android.permission.READ_SMS" />
     
+    <!-- Be able to vibrate -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
@@ -38,6 +41,7 @@
                 <data android:mimeType="application/vnd.wap.mms-message" />
             </intent-filter>
         </receiver>
+            
     </application>
 
 </manifest>
