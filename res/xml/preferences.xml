@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory android:title="Alert Settings" >
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_oncall"
+            android:summary="Enable or disable alert settings"
+            android:title="Enable On-Call" />
+        
+        <RingtonePreference
+            android:key="pref_alertsound"
+            android:summary="Sound played on loop until alert dismissed"
+            android:title="Alert Sound" />
+        
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_alarmvol"
+            android:summary="Make a sound, even if sound disabled"
+            android:title="Always Audible" />
+        
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_vibrate"
+            android:summary="Vibrate in addition to audio"
+            android:title="Vibrate" />
+    </PreferenceCategory>
+    
+    <PreferenceCategory android:title="Match Settings" >
+        <EditTextPreference
+            android:defaultValue=""
+            android:key="pref_match"
+            android:summary="Text to trigger alert, if matched"
+            android:title="Match Pattern" />
+        
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="pref_regex"
+            android:summary="Treat match text as a regular expression"
+            android:title="Regex Mode" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
