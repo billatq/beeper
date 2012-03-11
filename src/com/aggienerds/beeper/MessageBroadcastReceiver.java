@@ -1,6 +1,7 @@
 package com.aggienerds.beeper;
 
 import java.util.List;
+import java.util.regex.PatternSyntaxException;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -55,7 +56,14 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 		else
 		{
 			// Run it through the regex
-			if (comparison.matches("^.*" + matchText + ".*$")) { return true; }
+			try
+			{
+				if (comparison.matches("^.*" + matchText + ".*$")) { return true; }
+			}
+		    catch(PatternSyntaxException e)
+		    {
+		    	Log.d("MessageBroadcastReceiver", "Invalid regex in match pattern. Ignoring.");
+		    }
 		}
 		
 		return false;
