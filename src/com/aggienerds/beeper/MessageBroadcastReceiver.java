@@ -81,7 +81,7 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 		//nm.notify(0, n);
 		
         // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification(android.R.drawable.stat_notify_error, "", System.currentTimeMillis());
+        Notification notification = new Notification(R.drawable.status_icon, "", System.currentTimeMillis());
         
 		String alertSound = prefs.getString("pref_alertsound", "");
 		if ((alertSound != null) && (alertSound.length() > 0))
