@@ -16,13 +16,13 @@
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="pref_alarmvol"
-            android:summary="Make a sound, even if sound disabled"
+            android:summary="Make a sound at alarm volume"
             android:title="Always Audible" />
         
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="pref_vibrate"
-            android:summary="Vibrate, even if vibration disabled"
+            android:summary="Vibrate, even if vibrate notifications not enabled"
             android:title="Vibrate" />
     </PreferenceCategory>
     
@@ -30,7 +30,7 @@
         <EditTextPreference
             android:defaultValue=""
             android:key="pref_match"
-            android:summary="Text in sender to match for sms or mms. Text in body to match for sms only."
+            android:summary="Require a match for this field to text in the sender, subject line or body for sms or sender only for mms"
             android:title="Match Pattern" />
         
         <CheckBoxPreference
