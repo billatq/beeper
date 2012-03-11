@@ -17,34 +17,25 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		String action = intent.getAction();
-		String type = intent.getType();
 		
-		if (action == null) { action = new String(); }
-		if (type == null) { type = new String(); }
-		
-		// We got an MMS or SMS
-		if ((action.contains("WAP_PUSH_RECEIVED")
-				&& type.contains("application/vnd.wap.mms-message"))
-				|| action.contains("SMS_RECEIVED"))
+		SharedPreferences prefs = context.getSharedPreferences("com.aggienerds.beeper_preferences", 0);
+		if (prefs.getBoolean("pref_oncall", false))
 		{
-			SharedPreferences prefs = context.getSharedPreferences("com.aggienerds.beeper_preferences", 0);
-			
-			if (prefs.getBoolean("pref_oncall", false))
+			TelephonyMessageRetriever retriever = new TelephonyMessageRetriever(context, intent);
+			List<Message> messages = retriever.getMessages();
+			if ((messages != null) && (messages.size() > 0))
 			{
-				Log.d("MessageBroadcastReceiver", "Got a message event!");
-				Message message = getMessage(context);
-				if (message != null)
+				for (Message message : messages)
 				{
 					if (doesMessageMatch(prefs, message))
 					{
 						broadcastMessage(context, prefs, message);
 					}
 				}
-				else
-				{
-					Log.d("MessageBroadcastReceiver", "Told we got a message, but couldn't find it.");
-				}
+			}
+			else
+			{
+				Log.d("MessageBroadcastReceiver", "Told we got a message, but couldn't find it.");
 			}
 		}
 	}
@@ -76,24 +67,23 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 		NotificationManager nm = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		SharedPreferences prefs = preferences;
 		
-		// TODO: Make notification ids unique?
-		Log.d("MessageBroadcastRecieiver", "Trying to broadcast out!");
-		//nm.notify(0, n);
+
 		
         // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification(R.drawable.status_icon, "", System.currentTimeMillis());
+        Notification notification = new Notification(R.drawable.status_icon, "Incoming Page", System.currentTimeMillis());
         
 		String alertSound = prefs.getString("pref_alertsound", "");
 		if ((alertSound != null) && (alertSound.length() > 0))
 		{
 			notification.sound = Uri.parse(alertSound);
 		}
-        
-        Intent messagingIntent = new Intent(Intent.ACTION_VIEW); 
-        messagingIntent.setData(Uri.parse("content://mms-sms/conversations/" + message.getThread_id()));  
-
+		
+		Intent messagingIntent = new Intent(Intent.ACTION_MAIN);
+		messagingIntent.addCategory(Intent.CATEGORY_DEFAULT);
+		messagingIntent.setType("vnd.android-dir/mms-sms");
 
         // The PendingIntent to launch our activity if the user selects this notification
+		// TODO: Make notification ids unique?
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, messagingIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
         
         boolean haveSubject = false;
@@ -153,60 +143,5 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
         
         nm.notify(0, notification);
 
-	}
-	
-	/**
-	 * Make the best guess at the newest message shown
-	 * @param context
-	 * @return
-	 */
-	private Message getMessage(Context context)
-	{
-		MessageRetriever mr = new MessageRetriever(context);
-		
-		List<Message> messages = null;
-		Message toReturn = null;
-		
-		// TODO: Better algorithm than that
-		// Perhaps look at the time on the message returned?
-		// Can we get the sender address from the notification?
-		
-		// Try to find messages
-		long startTime = System.currentTimeMillis();
-		while((messages == null) || (messages.size() == 0))
-		{
-			// Don't loop for longer than a minute
-			long curTime = System.currentTimeMillis();
-			if (((curTime - startTime)/1000) > 60)
-			{
-				break;
-			}
-			
-			messages = mr.getConversationsLast(true);
-			
-			for (Message m : messages)
-			{
-				if (toReturn == null)
-				{
-					toReturn = m;
-				}
-				
-				// If this date is greater than what we have,
-				// then make it what we have
-				if (m.getDate().compareTo(toReturn.getDate()) == 1)
-				{
-					toReturn = m;
-				}
-			}
-			
-			// Sleep about a second before trying again
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				// We shouldn't get one of these here
-				e.printStackTrace();
-			}
-		}
-		return toReturn;
 	}
 }

@@ -1,7 +1,5 @@
 package com.aggienerds.beeper;
 
-import java.util.List;
-
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 

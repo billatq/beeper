@@ -9,11 +9,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
-public class MessageRetriever {
+public class ContentProviderMessageRetriever {
 
 	private Context context;
 
-	public MessageRetriever(Context context) {
+	public ContentProviderMessageRetriever(Context context) {
 		this.context = context;
 	}
 
