@@ -75,7 +75,9 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 		NotificationManager nm = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
 		SharedPreferences prefs = preferences;
 		
-
+		Intent myIntent = new Intent(context, NotifierService.class);
+		myIntent.putExtra("testData", "Some Random Data, blah");
+		context.startService(myIntent);
 		
         // Set the icon, scrolling text and timestamp
         Notification notification = new Notification(R.drawable.status_icon, "Incoming Page", System.currentTimeMillis());
@@ -86,6 +88,7 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 			notification.sound = Uri.parse(alertSound);
 		}
 		
+		// Have the intent launch the mms/sms application
 		Intent messagingIntent = new Intent(Intent.ACTION_MAIN);
 		messagingIntent.addCategory(Intent.CATEGORY_DEFAULT);
 		messagingIntent.setType("vnd.android-dir/mms-sms");
