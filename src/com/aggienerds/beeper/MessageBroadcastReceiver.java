@@ -69,33 +69,16 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
 		return false;
 	}
 	
+	/***
+	 * Work out what we'd like to say are the subject and body and pass it along to a service
+	 * that specializes in making sure that the notification is received appropriately.
+	 * @param context
+	 * @param preferences
+	 * @param message
+	 */
 	private void broadcastMessage(Context context, SharedPreferences preferences, Message message)
 	{
 		Log.d("MessageBroadcastRecieiver", "Setting up notification message");
-		NotificationManager nm = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-		SharedPreferences prefs = preferences;
-		
-		Intent myIntent = new Intent(context, NotifierService.class);
-		myIntent.putExtra("testData", "Some Random Data, blah");
-		context.startService(myIntent);
-		
-        // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification(R.drawable.status_icon, "Incoming Page", System.currentTimeMillis());
-        
-		String alertSound = prefs.getString("pref_alertsound", "");
-		if ((alertSound != null) && (alertSound.length() > 0))
-		{
-			notification.sound = Uri.parse(alertSound);
-		}
-		
-		// Have the intent launch the mms/sms application
-		Intent messagingIntent = new Intent(Intent.ACTION_MAIN);
-		messagingIntent.addCategory(Intent.CATEGORY_DEFAULT);
-		messagingIntent.setType("vnd.android-dir/mms-sms");
-
-        // The PendingIntent to launch our activity if the user selects this notification
-		// TODO: Make notification ids unique?
-        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, messagingIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
         
         boolean haveSubject = false;
         if ((message.getSubject() != null) && (message.getSubject().length() > 0))
@@ -133,26 +116,12 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
         	body = message.getAddress();
         }
         
-
-        notification.setLatestEventInfo(context, subject, body, contentIntent);
-        
-        // Have it cancel when it's pressed, but also loop audio, etc. until it's handled.
-        notification.flags |= (Notification.FLAG_AUTO_CANCEL | Notification.FLAG_INSISTENT);
-        
-        // Vibrate, overriding default settings
-        if (prefs.getBoolean("pref_vibrate", false))
-        {
-            if (prefs.getBoolean("vibrate", true)){
-                notification.vibrate = new long[] {0, 800, 500, 800};
-            }
-        }
-        
-        if (prefs.getBoolean("pref_alarmvol", false))
-        {
-        	notification.audioStreamType = AudioManager.STREAM_ALARM;
-        }
-        
-        nm.notify(0, notification);
+        // Shove the subject and body that we'd like to broadcast into extras
+        // and pass off to the notifier service
+		Intent myIntent = new Intent(context, NotifierService.class);
+		myIntent.putExtra("textSubject", subject);
+		myIntent.putExtra("textBody", body);
+		context.startService(myIntent);
 
 	}
 }
