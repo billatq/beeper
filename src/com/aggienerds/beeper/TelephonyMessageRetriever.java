@@ -12,6 +12,7 @@ import android.telephony.SmsMessage;
 
 public class TelephonyMessageRetriever {
 	
+	@SuppressWarnings("unused")
 	private static final String TAG = "TelephonyMessageRetriever";
 	
 	@SuppressWarnings("unused")

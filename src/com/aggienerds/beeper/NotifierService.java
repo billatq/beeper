@@ -1,5 +1,7 @@
 package com.aggienerds.beeper;
 
+import java.io.IOException;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -8,12 +10,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.widget.Toast;
 
 public class NotifierService extends Service {
+	MediaPlayer mediaPlayer = null;
+	
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -21,27 +26,48 @@ public class NotifierService extends Service {
 
 	@Override
 	public void onCreate() {
-		Context context = getApplicationContext();
-		int duration = Toast.LENGTH_SHORT;
-
-		Toast toast = Toast.makeText(context, "NotifierService started!", duration);
-		toast.show();
 	}
 
 	@Override
 	public void onDestroy() {
-		// code to execute when the service is shutting down
 	}
+	
 
 	@Override
 	public void onStart(Intent intent, int startid) {
+		Context context = getApplicationContext();
 		Bundle extras = intent.getExtras();
 		
-		// Pull out the subject and body from the extras and broadcast
-		String textSubject = extras.getString("textSubject");
-		String textBody = extras.getString("textBody");
-		broadcastMessage(textSubject, textBody);
-
+		String intentType = extras.getString("intentType");
+		if (intentType != null)
+		{
+			if (intentType.equals("textMessage"))
+			{
+				// Pull out the subject and body from the extras and broadcast
+				String textSubject = extras.getString("textSubject");
+				String textBody = extras.getString("textBody");
+				broadcastMessage(textSubject, textBody);
+			}
+			else if (intentType.equals("notificationTap"))
+			{
+				// Kill all notifications that are currently showing
+				NotificationManager nm = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+				nm.cancelAll();
+				
+				// Kill any sounds that are currently playing
+				if (mediaPlayer != null)
+				{
+					mediaPlayer.stop();
+				}
+				
+				// Dispatch to the mms / sms app
+				Intent messagingIntent = new Intent(Intent.ACTION_MAIN);
+				messagingIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				messagingIntent.addCategory(Intent.CATEGORY_DEFAULT);
+				messagingIntent.setType("vnd.android-dir/mms-sms");
+				startActivity(messagingIntent);
+			}
+		}
 	}
 	
 	private void broadcastMessage(String subject, String body)
@@ -57,22 +83,47 @@ public class NotifierService extends Service {
 		String alertSound = prefs.getString("pref_alertsound", "");
 		if ((alertSound != null) && (alertSound.length() > 0))
 		{
-			notification.sound = Uri.parse(alertSound);
-		}
-		
-		// Have the intent launch the mms/sms application
-		Intent messagingIntent = new Intent(Intent.ACTION_MAIN);
-		messagingIntent.addCategory(Intent.CATEGORY_DEFAULT);
-		messagingIntent.setType("vnd.android-dir/mms-sms");
+			//notification.sound = Uri.parse(alertSound);
 
-        // The PendingIntent to launch our activity if the user selects this notification
-		// TODO: Make notification ids unique?
-        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, messagingIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+			try {
+				// Stop any existing media from playing
+				if (mediaPlayer != null)
+				{
+					
+					mediaPlayer.stop();
+				}
+				
+				// Create new media player and set up a looping sound
+				mediaPlayer = new MediaPlayer();
+		        if (prefs.getBoolean("pref_alarmvol", false))
+		        {
+		        	mediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+		        }
+				
+				mediaPlayer.setDataSource(this,Uri.parse(alertSound));
+				mediaPlayer.setLooping(true);
+				mediaPlayer.prepare();
+				mediaPlayer.start();
+				
+				// TODO: Should we be vibrating from here instead of the notification?
+				
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				e.printStackTrace();
+			} catch (IllegalStateException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
         
-        notification.setLatestEventInfo(context, subject, body, contentIntent);
-        
-        // Have it cancel when it's pressed, but also loop audio, etc. until it's handled.
-        notification.flags |= (Notification.FLAG_AUTO_CANCEL | Notification.FLAG_INSISTENT);
+		// Create a notification
+        Intent returnIntent = new Intent(context, NotifierService.class);
+        returnIntent.putExtra("intentType", "notificationTap");
+        PendingIntent notificationIntent = PendingIntent.getService(context, 0, returnIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        notification.setLatestEventInfo(context, subject, body, notificationIntent);
         
         // Vibrate, overriding default settings
         if (prefs.getBoolean("pref_vibrate", false))
@@ -80,11 +131,6 @@ public class NotifierService extends Service {
             if (prefs.getBoolean("vibrate", true)){
                 notification.vibrate = new long[] {0, 800, 500, 800};
             }
-        }
-        
-        if (prefs.getBoolean("pref_alarmvol", false))
-        {
-        	notification.audioStreamType = AudioManager.STREAM_ALARM;
         }
         
         nm.notify(0, notification);

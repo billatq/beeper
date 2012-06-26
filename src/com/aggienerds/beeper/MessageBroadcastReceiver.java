@@ -2,16 +2,10 @@ package com.aggienerds.beeper;
 
 import java.util.List;
 import java.util.regex.PatternSyntaxException;
-
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.AudioManager;
-import android.net.Uri;
 import android.util.Log;
 
 public class MessageBroadcastReceiver extends BroadcastReceiver {
@@ -119,6 +113,7 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
         // Shove the subject and body that we'd like to broadcast into extras
         // and pass off to the notifier service
 		Intent myIntent = new Intent(context, NotifierService.class);
+		myIntent.putExtra("intentType", "textMessage");
 		myIntent.putExtra("textSubject", subject);
 		myIntent.putExtra("textBody", body);
 		context.startService(myIntent);
