@@ -14,6 +14,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Vibrator;
 
 public class NotifierService extends Service {
 	MediaPlayer mediaPlayer = null;
@@ -49,15 +50,19 @@ public class NotifierService extends Service {
 			}
 			else if (intentType.equals("notificationTap"))
 			{
-				// Kill all notifications that are currently showing
+				// Kill the notification that is currently showing (id=0)
 				NotificationManager nm = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-				nm.cancelAll();
+				nm.cancel(0);
 				
 				// Kill any sounds that are currently playing
 				if (mediaPlayer != null)
 				{
 					mediaPlayer.stop();
 				}
+				
+				// Kill the vibrator
+				Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+				v.cancel();
 				
 				// Dispatch to the mms / sms app
 				Intent messagingIntent = new Intent(Intent.ACTION_MAIN);
@@ -94,9 +99,15 @@ public class NotifierService extends Service {
 				
 				// Create new media player and set up a looping sound
 				mediaPlayer = new MediaPlayer();
+				
+				// Play at alarm volume if need be, otherwise treat like a ringtone
 		        if (prefs.getBoolean("pref_alarmvol", false))
 		        {
 		        	mediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+		        }
+		        else
+		        {
+		        	mediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
 		        }
 				
 				mediaPlayer.setDataSource(this,Uri.parse(alertSound));
@@ -104,7 +115,15 @@ public class NotifierService extends Service {
 				mediaPlayer.prepare();
 				mediaPlayer.start();
 				
-				// TODO: Should we be vibrating from here instead of the notification?
+				// Get the vibrator
+				Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+				 
+				// Vibrate for 300 milliseconds
+				if (prefs.getBoolean("pref_vibrate", false))
+				{
+					long[] vibratePattern = new long[] {0, 800, 500, 800};
+				    v.vibrate(vibratePattern, 0);
+				}
 				
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
@@ -121,17 +140,21 @@ public class NotifierService extends Service {
 		// Create a notification
         Intent returnIntent = new Intent(context, NotifierService.class);
         returnIntent.putExtra("intentType", "notificationTap");
+        
         PendingIntent notificationIntent = PendingIntent.getService(context, 0, returnIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         notification.setLatestEventInfo(context, subject, body, notificationIntent);
         
-        // Vibrate, overriding default settings
-        if (prefs.getBoolean("pref_vibrate", false))
-        {
-            if (prefs.getBoolean("vibrate", true)){
-                notification.vibrate = new long[] {0, 800, 500, 800};
-            }
-        }
+        // Point back to this same class in the event of a delete.
+        // We don't want to require a force kill to stop audio.
+        notification.deleteIntent = PendingIntent.getService(context, 0, returnIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         
+        // Red flashy light
+        notification.ledARGB = 0xFFff0000;
+        notification.flags |= Notification.FLAG_SHOW_LIGHTS;
+        notification.ledOnMS = 100;
+        notification.ledOffMS = 100; 
+        
+        // Create a notification with an id=0
         nm.notify(0, notification);
 	}
 }
