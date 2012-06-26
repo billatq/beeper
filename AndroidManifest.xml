@@ -4,7 +4,8 @@
     android:versionCode="3"
     android:versionName="1.2" >
 
-    <uses-sdk android:minSdkVersion="7" />
+    <!-- We don't use any API not available in newer versions, and we don't support older than 7 -->
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="7"/>
 
     <!-- Get notifications of receiving SMS/MMS -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
