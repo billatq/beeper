@@ -14,7 +14,6 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.widget.Toast;
 
 public class NotifierService extends Service {
 	MediaPlayer mediaPlayer = null;
