@@ -16,7 +16,6 @@
 
 package com.aggienerds.beeper;
 
-import java.util.List;
 import java.util.regex.PatternSyntaxException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -25,25 +24,22 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 public class MessageBroadcastReceiver extends BroadcastReceiver {
+    
+    private static final String TAG = "MessageBroadcastReceiver";
 
     @Override
     public void onReceive(Context context, Intent intent) {
-
-        SharedPreferences prefs = context.getSharedPreferences(
-                "com.aggienerds.beeper_preferences", 0);
+        // If we aren't on call, don't bother
+        SharedPreferences prefs = context.getSharedPreferences("com.aggienerds.beeper_preferences", 0);
         if (prefs.getBoolean("pref_oncall", false)) {
-            TelephonyMessageRetriever retriever = new TelephonyMessageRetriever(
-                    context, intent);
-            List<Message> messages = retriever.getMessages();
-            if ((messages != null) && (messages.size() > 0)) {
-                for (Message message : messages) {
-                    if (doesMessageMatch(prefs, message)) {
-                        broadcastMessage(context, prefs, message);
-                    }
+            TelephonyMessageRetriever retriever = new TelephonyMessageRetriever(context, intent);
+            Message message = retriever.getMessage();
+            if (message != null) {
+                if (doesMessageMatch(prefs, message)) {
+                    broadcastMessage(context, prefs, message);
                 }
             } else {
-                Log.d("MessageBroadcastReceiver",
-                        "Told we got a message, but couldn't find it.");
+                Log.d(TAG, "Told we got a message, but couldn't find it.");
             }
         }
     }
@@ -69,26 +65,16 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
                     return true;
                 }
             } catch (PatternSyntaxException e) {
-                Log.d("MessageBroadcastReceiver",
-                        "Invalid regex in match pattern. Ignoring.");
+                Log.d(TAG, "Invalid regex in match pattern. Ignoring.");
             }
         }
 
         return false;
     }
 
-    /***
-     * Work out what we'd like to say are the subject and body and pass it along
-     * to a service that specializes in making sure that the notification is
-     * received appropriately.
-     * 
-     * @param context
-     * @param preferences
-     * @param message
-     */
     private void broadcastMessage(Context context,
             SharedPreferences preferences, Message message) {
-        Log.d("MessageBroadcastRecieiver", "Setting up notification message");
+        Log.d(TAG, "Setting up notification message");
 
         boolean haveSubject = false;
         if ((message.getSubject() != null)
@@ -104,6 +90,7 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
         String subject = "";
         String body = "";
 
+        // Use what we have. If we don't, then set reasonable defaults.
         if (haveSubject && haveBody) {
             subject = message.getSubject();
             body = message.getBody();
@@ -125,6 +112,5 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
         myIntent.putExtra("textSubject", subject);
         myIntent.putExtra("textBody", body);
         context.startService(myIntent);
-
     }
 }

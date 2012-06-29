@@ -41,14 +41,6 @@ public class NotifierService extends Service {
     }
 
     @Override
-    public void onCreate() {
-    }
-
-    @Override
-    public void onDestroy() {
-    }
-
-    @Override
     public void onStart(Intent intent, int startid) {
         Context context = getApplicationContext();
         Bundle extras = intent.getExtras();

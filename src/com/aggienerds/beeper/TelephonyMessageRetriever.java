@@ -16,9 +16,6 @@
 
 package com.aggienerds.beeper;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.aggienerds.beeper.androidpdu.*;
 
 import android.content.Context;
@@ -45,23 +42,23 @@ public class TelephonyMessageRetriever {
         this.intent = intent;
     }
 
-    public List<Message> getMessages() {
+    public Message getMessage() {
         String action = intent.getAction();
         String type = intent.getType();
 
         if (action.contains("WAP_PUSH_RECEIVED")
                 && type.contains("application/vnd.wap.mms-message")) {
-            return getMMSMessages();
+            return getMMSMessage();
         } else if (action.contains("SMS_RECEIVED")) {
-            return getSMSMessages();
+            return getSMSMessage();
         }
         return null;
     }
 
-    private List<Message> getSMSMessages() {
-        List<Message> messages = new ArrayList<Message>();
+    private Message getSMSMessage() {
         Bundle bundle = intent.getExtras();
         if (bundle != null) {
+            // There will only be a single PDU here, even though it's an array
             Object[] pdus = (Object[]) bundle.get("pdus");
             for (Object pdu : pdus) {
                 SmsMessage sms = SmsMessage.createFromPdu((byte[]) pdu);
@@ -69,14 +66,13 @@ public class TelephonyMessageRetriever {
                 m.setAddress(sms.getOriginatingAddress());
                 m.setBody(sms.getMessageBody());
                 m.setDate(sms.getTimestampMillis());
-                messages.add(m);
+                return m;
             }
         }
-        return messages;
+        return null;
     }
 
-    private List<Message> getMMSMessages() {
-        List<Message> messages = new ArrayList<Message>();
+    private Message getMMSMessage() {
         PduParser parser = new PduParser();
         byte[] intentByteArray = intent.getByteArrayExtra("data");
         PduHeaders headers = parser.parseHeaders(intentByteArray);
@@ -95,10 +91,10 @@ public class TelephonyMessageRetriever {
             if (encodedFrom != null) {
                 fromStr = encodedFrom.getString();
                 m.setAddress(fromStr);
-                messages.add(m);
+                return m;
             }
 
         }
-        return messages;
+        return null;
     }
 }
