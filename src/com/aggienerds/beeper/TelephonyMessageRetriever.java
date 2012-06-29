@@ -65,7 +65,6 @@ public class TelephonyMessageRetriever {
                 Message m = new Message();
                 m.setAddress(sms.getOriginatingAddress());
                 m.setBody(sms.getMessageBody());
-                m.setDate(sms.getTimestampMillis());
                 return m;
             }
         }

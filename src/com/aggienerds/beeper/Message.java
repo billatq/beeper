@@ -16,8 +16,6 @@
 
 package com.aggienerds.beeper;
 
-import java.util.Date;
-
 public class Message {
     private String address;
     private String subject;
