@@ -79,20 +79,16 @@ public class NotifierService extends Service {
 
     private void broadcastMessage(String subject, String body) {
         Context context = getApplicationContext();
-        NotificationManager nm = (NotificationManager) context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        SharedPreferences prefs = context.getSharedPreferences(
-                "com.aggienerds.beeper_preferences", 0);
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        SharedPreferences prefs = context.getSharedPreferences("com.aggienerds.beeper_preferences", 0);
 
         // Set the icon, scrolling text and timestamp
         Notification notification = new Notification(R.drawable.status_icon,
                 "Incoming Page", System.currentTimeMillis());
 
-        // Set up the sound
+        // Set up the sound, if set
         String alertSound = prefs.getString("pref_alertsound", "");
         if ((alertSound != null) && (alertSound.length() > 0)) {
-            // notification.sound = Uri.parse(alertSound);
-
             try {
                 // Stop any existing media from playing
                 if (mediaPlayer != null) {
@@ -103,8 +99,7 @@ public class NotifierService extends Service {
                 // Create new media player and set up a looping sound
                 mediaPlayer = new MediaPlayer();
 
-                // Play at alarm volume if need be, otherwise treat like a
-                // ringtone
+                // Play at alarm volume if need be, otherwise treat like a ringtone
                 if (prefs.getBoolean("pref_alarmvol", false)) {
                     mediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
                 } else {
@@ -116,15 +111,6 @@ public class NotifierService extends Service {
                 mediaPlayer.prepare();
                 mediaPlayer.start();
 
-                // Get the vibrator
-                Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-
-                // Vibrate for 300 milliseconds
-                if (prefs.getBoolean("pref_vibrate", false)) {
-                    long[] vibratePattern = new long[] { 0, 800, 500, 800 };
-                    v.vibrate(vibratePattern, 0);
-                }
-
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
             } catch (SecurityException e) {
@@ -135,6 +121,13 @@ public class NotifierService extends Service {
                 e.printStackTrace();
             }
 
+        }
+        
+        if (prefs.getBoolean("pref_vibrate", false)) {
+            // Vibrate, if requested
+            Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            long[] vibratePattern = new long[] { 0, 800, 500, 800 };
+            v.vibrate(vibratePattern, 0);
         }
 
         // Create a notification
@@ -151,7 +144,7 @@ public class NotifierService extends Service {
         notification.deleteIntent = PendingIntent.getService(context, 0,
                 returnIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        // Red flashy light
+        // Red flashy light, if we support one
         notification.ledARGB = 0xFFff0000;
         notification.flags |= Notification.FLAG_SHOW_LIGHTS;
         notification.ledOnMS = 100;
