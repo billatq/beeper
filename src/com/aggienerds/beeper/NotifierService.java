@@ -42,6 +42,11 @@ public class NotifierService extends Service {
 
     @Override
     public void onStart(Intent intent, int startid) {
+        // The service is simply being restarted, nothing to do
+        if (intent == null) {
+            return;
+        }
+
         Context context = getApplicationContext();
         Bundle extras = intent.getExtras();
 
