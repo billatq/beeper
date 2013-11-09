@@ -71,13 +71,6 @@ public class NotifierService extends Service {
                 // Kill the vibrator
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 v.cancel();
-
-                // Dispatch to the mms / sms app
-                Intent messagingIntent = new Intent(Intent.ACTION_MAIN);
-                messagingIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                messagingIntent.addCategory(Intent.CATEGORY_DEFAULT);
-                messagingIntent.setType("vnd.android-dir/mms-sms");
-                startActivity(messagingIntent);
             }
         }
     }
