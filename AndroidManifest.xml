@@ -20,14 +20,11 @@
     android:versionName="1.2" >
 
     <!-- We don't use any API not available in newer versions, and we don't support older than 7 -->
-    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="7"/>
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="19"/>
 
     <!-- Get notifications of receiving SMS/MMS -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_MMS" />
-    
-    <!-- Read the system SMS/MMS store -->
-    <uses-permission android:name="android.permission.READ_SMS" />
     
     <!-- Be able to vibrate -->
     <uses-permission android:name="android.permission.VIBRATE" />

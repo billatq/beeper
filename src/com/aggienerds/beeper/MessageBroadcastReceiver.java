@@ -24,7 +24,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 public class MessageBroadcastReceiver extends BroadcastReceiver {
-    
+
     private static final String TAG = "MessageBroadcastReceiver";
 
     @Override

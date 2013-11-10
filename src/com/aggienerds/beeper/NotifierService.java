@@ -18,6 +18,7 @@ package com.aggienerds.beeper;
 
 import java.io.IOException;
 
+import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -28,11 +29,18 @@ import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
+import android.provider.Telephony;
+import android.util.Log;
 
+@TargetApi(19)
 public class NotifierService extends Service {
+
+    private static final String TAG = "NotifierService";
+
     MediaPlayer mediaPlayer = null;
 
     @Override
@@ -44,6 +52,7 @@ public class NotifierService extends Service {
     public void onStart(Intent intent, int startid) {
         // The service is simply being restarted, nothing to do
         if (intent == null) {
+            Log.d(TAG, "Null intent received. Ignoring.");
             return;
         }
 
@@ -71,7 +80,32 @@ public class NotifierService extends Service {
                 // Kill the vibrator
                 Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                 v.cancel();
+
+                // Dispatch to the mms / sms app
+                Intent messagingIntent = new Intent(Intent.ACTION_MAIN);
+                messagingIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    Log.d(TAG, "We're on Android 4.4+, opening the default sms application.");
+                    messagingIntent.setPackage(Telephony.Sms.getDefaultSmsPackage(context));
+                } else {
+                    // Pre 4.4 behavior
+                    Log.d(TAG, "We're on Android 4.3 or lower, opening the mms-sms handler.");
+                    messagingIntent.addCategory(Intent.CATEGORY_DEFAULT);
+                    messagingIntent.setType("vnd.android-dir/mms-sms");
+                }
+                try {
+                    startActivity(messagingIntent);
+                } catch (Exception e) {
+                    Log.d(TAG, "Couldn't start the messaging activity");
+                    Log.d(TAG, e.getMessage());
+                }
+            } else {
+                String message = String.format("Got an unknown intentType of type %s", intentType);
+                Log.d(TAG, message);
             }
+        } else {
+            Log.d(TAG, "Got a null string for the intentType");
         }
     }
 
@@ -81,8 +115,10 @@ public class NotifierService extends Service {
         SharedPreferences prefs = context.getSharedPreferences("com.aggienerds.beeper_preferences", 0);
 
         // Set the icon, scrolling text and timestamp
-        Notification notification = new Notification(R.drawable.status_icon,
-                "Incoming Page", System.currentTimeMillis());
+        Notification notification = new Notification(
+                R.drawable.status_icon,
+                "Incoming Page",
+                System.currentTimeMillis());
 
         // Set up the sound, if set
         String alertSound = prefs.getString("pref_alertsound", "");
@@ -120,7 +156,7 @@ public class NotifierService extends Service {
             }
 
         }
-        
+
         if (prefs.getBoolean("pref_vibrate", false)) {
             // Vibrate, if requested
             Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -132,15 +168,22 @@ public class NotifierService extends Service {
         Intent returnIntent = new Intent(context, NotifierService.class);
         returnIntent.putExtra("intentType", "notificationTap");
 
-        PendingIntent notificationIntent = PendingIntent.getService(context, 0,
-                returnIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent notificationIntent = PendingIntent.getService(
+                context,
+                0,
+                returnIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
         notification.setLatestEventInfo(context, subject, body,
                 notificationIntent);
 
         // Point back to this same class in the event of a delete.
         // We don't want to require a force kill to stop audio.
-        notification.deleteIntent = PendingIntent.getService(context, 0,
-                returnIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        notification.deleteIntent = PendingIntent.getService(
+                context,
+                0,
+                returnIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Red flashy light, if we support one
         notification.ledARGB = 0xFFff0000;
