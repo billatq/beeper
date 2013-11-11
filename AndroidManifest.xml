@@ -16,7 +16,7 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.aggienerds.beeper"
-    android:versionCode="5"
+    android:versionCode="6"
     android:versionName="1.2" >
 
     <!-- We don't use any API not available in newer versions, and we don't support older than 7 -->
