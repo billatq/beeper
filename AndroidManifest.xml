@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
- Copyright (C) 2012 William Reading 
+ Copyright (C) 2012-2014 William Reading
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.aggienerds.beeper"
-    android:versionCode="6"
-    android:versionName="1.2" >
+    android:versionCode="7"
+    android:versionName="1.2.1" >
 
     <!-- We don't use any API not available in newer versions, and we don't support older than 7 -->
     <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="19"/>
@@ -29,6 +29,9 @@
     <!-- Be able to vibrate -->
     <uses-permission android:name="android.permission.VIBRATE" />
     
+    <!-- Be able to play audio on the sd card  -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >

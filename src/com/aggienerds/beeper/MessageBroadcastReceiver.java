@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 William Reading 
+ * Copyright (C) 2012-2014 William Reading
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package com.aggienerds.beeper;
 
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -55,13 +58,18 @@ public class MessageBroadcastReceiver extends BroadcastReceiver {
             if (comparison == "") {
                 return true;
             }
+            // Compare in a case insensitive way
+            comparison = comparison.toLowerCase(Locale.getDefault());
+            matchText = matchText.toLowerCase(Locale.getDefault());
             if (comparison.contains(matchText)) {
                 return true;
             }
         } else {
             // Run it through the regex
             try {
-                if (comparison.matches("^.*" + matchText + ".*$")) {
+                Pattern pattern = Pattern.compile("^.*" + matchText + ".*$", Pattern.CASE_INSENSITIVE);
+                Matcher matcher = pattern.matcher(comparison);
+                if (matcher.matches()) {
                     return true;
                 }
             } catch (PatternSyntaxException e) {
